@@ -2,7 +2,7 @@
 <config>
   <modules>
     <Ansyori_Aongkir>
-      <version>1.0.0</version>
+      <version>1.0.1</version>
     </Ansyori_Aongkir>
   </modules>
   <frontend>
@@ -41,7 +41,7 @@
 	  </aongkir>
 	  <aongkir_mysql4>
 		<class>Ansyori_Aongkir_Model_Mysql4</class>
-		<entities>		  
+		<entities>
 			  <area>
 				<table>daftar_alamat</table>
 			  </area>
@@ -68,7 +68,7 @@
 		</connection>
 	  </aongkir_read>
 	</resources>
-  </global>    
+  </global>
 	<default>
         <carriers>
             <ongkir>
@@ -80,13 +80,13 @@
                 <sort_order>0</sort_order>
             </ongkir>
         </carriers>
-    </default>    
+    </default>
     <crontab>
-        <jobs>            
+        <jobs>
 			<aongkir_updatealamat>
                 <schedule><cron_expr>0 0  * * *</cron_expr></schedule>
                 <run><model>aongkir/cron::UpdateAlamat</model></run>
             </aongkir_updatealamat>
         </jobs>
     </crontab>
-</config> 
+</config>

@@ -21,8 +21,9 @@ class Ansyori_Aongkir_Model_System_Config_Source_Serpis
 	}
 
 
-	public function getSql()
+	/*public function getSql()
 	{
+    die('ini dijalanin ga?');
 		$sql2 = "
 		CREATE TABLE IF NOT EXISTS `aongkir_service_list` (
 		  `idx` int(11) NOT NULL AUTO_INCREMENT,
@@ -66,11 +67,11 @@ class Ansyori_Aongkir_Model_System_Config_Source_Serpis
 			$this->setLog('Erorr Sql : '.$xx->getMessage());
 			return false;
 		}
-	}
+	}*/
 
 	public function toOptionArray()
 	{
-		$this->getSql();
+		//$this->getSql();
 		$data = '';
 		$arrs_serpis = array();
 		$sql = 'select distinct * from `aongkir_service_list` ';
@@ -95,7 +96,7 @@ class Ansyori_Aongkir_Model_System_Config_Source_Serpis
     {
 
 
-		$this->getSql();
+		//$this->getSql();
 
 		if($this->helper()->getApiKey()):
 
