@@ -23,22 +23,18 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 			foreach($list_euy as $jangar_kana_hulu)
 			{
 				$count++;
-				//getMethodRates($code,$title,$name,$rates)
-				// $method = $this->getMethodRates('_'.$count,'',$jangar_kana_hulu['text'],$jangar_kana_hulu['cost']);
-				// $result->append($method);
+				$method = $this->getMethodRates('_'.$count,'',$jangar_kana_hulu['text'],$jangar_kana_hulu['cost']);
+				$result->append($method);
 			}
 
 			// NYANG BAROE
-			foreach ($list_euy as $key => $_rates) {
-				foreach ($_rates as $_rate) {
-					$count++;
-					$_option = $this->getMethodRates('_'.$count,$key,$_rate['text'],$_rate['cost']);
-					$result->append($_option);
-				}
-			}
-
-
-
+			// foreach ($list_euy as $key => $_rates) {
+			// 	foreach ($_rates as $_rate) {
+			// 		$count++;
+			// 		$_option = $this->getMethodRates('_'.$count,$key,$_rate['text'],$_rate['cost']);
+			// 		$result->append($_option);
+			// 	}
+			// }
             return $result;
         }
 
@@ -67,88 +63,45 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 
 		public function getListRates()
 		{
-			$marketplace_item = $this->getOriginId();
+			$marketplace_item = $this->getItems();
 			$dest = $this->getCityId();
-			$weight = $this->getBeratTotal();
-			$origins = $this->getOriginsId();
+			// $weight = $this->getBeratTotal() + 0;
+			$product_count = count($marketplace_item);
 
 			$carriers = $this->getActiveCarriers();
 			$rate_list = array();
-			$rate_list_2 = array();
-
-			// foreach($carriers as $kurir)
-			// {
-			// 	$cost = 0;
-			// 	foreach ($marketplace_item as $key => $seller_item) {
-			// 		$origin = $seller_item['city'];
-			// 		$weight = 0;
-			// 		foreach ($seller_item['products'] as $item)
-			// 		{
-			// 			$weight += $item;
-			// 		}
-			// 		$rates_by_kurir = $this->helper()->getSavedRates($origin,$dest,$weight,$kurir);
-			// 		foreach ($rates_by_kurir as $final_list)
-			// 		{
-			// 			$rate_list_2[] = array(
-			// 				'text' => $final_list['text'] . "($weight Kg)",
-			// 				'cost' => $final_list['cost'],
-			// 			);
-			// 		}
-			// 	}
-			// }
-			foreach ($marketplace_item as $key => $seller_item) {
-				$origin = $seller_item['city'];
-				$weight = 0;
-				foreach ($seller_item['products'] as $item)
-				{
-					$weight += $item;
-				}
-				foreach ($carriers as $kurir) {
+			foreach ($carriers as $kurir) {
+				foreach ($marketplace_item as $seller_item) {
+					$origin = $seller_item['city'];
+					// Mage::log('each origin: '.Zend_Debug::dump($origin, null, false), null, 'bayu.log');
+					$weight = $seller_item['weight'] + 0;
 					$rates_by_kurir = $this->helper()->getSavedRates($origin,$dest,$weight,$kurir);
+					// Mage::log('each call: '.Zend_Debug::dump($rates_by_kurir, null, false), null, 'bayu.log');
 					foreach ($rates_by_kurir as $final_list) {
-						$rate_list_2[$key][] = array(
-							'text' => $final_list['text'] . "($weight Kg)",
-							'cost' => $final_list['cost'],
+						$rate_list_2[$final_list['text']][] = array(
+							'cost' 	 => $final_list['cost'],
+							'weight' => $weight,
 						);
 					}
 				}
 			}
-
-			//getRates($origin,$dest,$weight,$kurir)
-
-			// Combine rate with the same courrier, seller tak ada urusan disini, asal text sama
-			// Check all array, collect rate with same text combine it into one rate
-			// foreach ($rate_list as $rate) {
-			// 	if ($rate['text'] === )
-			// }
-
-
-			// This is the old code
-			foreach($carriers as $kurir)
-			{
-				if($weight > 29){
-					$rates_by_kurir = $this->helper()->getSavedRates($origins,$dest,1,$kurir);
-				}else{
-					$rates_by_kurir = $this->helper()->getSavedRates($origins,$dest,$weight,$kurir);
-				};
-				foreach($rates_by_kurir as $final_list)
-				{
-					if($weight > 29):
-						$ship_cost = $this->changePrice($final_list['cost']) * $weight;
-					else:
-						$ship_cost = $this->changePrice($final_list['cost']);
-					endif;
-
-					$rate_list[] = array(
-						'text' => $final_list['text'] . "($weight Kg)",
-						'cost' => $ship_cost
-
+			Mage::log('rates per-item: '.Zend_Debug::dump($rate_list_2, null, false), null, 'bayu.log');
+			foreach ($rate_list_2 as $key => $rates) {
+				$total_weight = 0;
+				$total_cost = 0;
+				foreach ($rates as $rate) {
+					$total_weight += $rate['weight'];
+					$total_cost += $rate['cost'];
+					$ratex = array(
+						'text' => $key . "(" . $total_weight . "Kg)",
+						'cost' => $total_cost,
 					);
 				}
+				if (count($rates) == $product_count)
+					array_push($rate_list, $ratex);
 			}
-			$this->helper()->setLog('Final rate '.print_r($rate_list,true));
-			// return $rate_list;
-			return $rate_list_2;
+			Mage::log('total rates: '.Zend_Debug::dump($rate_list, null, false), null, 'bayu.log');
+			return $rate_list;
 
 		}
 
@@ -232,7 +185,44 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 			endif;
 		}
 
-		public function getOriginId()
+		public function getItems()
+		{
+			$products = array();
+			$_items = Mage::getSingleton('checkout/session')->getQuote()->getAllItems();
+			foreach ($_items as $_item)
+			{
+				$product_seller	= Mage::getModel('marketplace/product')->getCollection()
+					->addFieldToFilter('mageproductid',$_item->getProduct()->getId());
+				if ($product_seller)
+				{
+					foreach ($product_seller as $product) {
+
+						// Mage::log('iki kotane: '.Zend_Debug::dump($_item->getProduct()->getName(), null, false), null, 'bayu.log');
+						$item_address = Mage::getModel('customer/address')->load($product[product_address_id]);
+						$city_text = '';
+						if ($item_address) $city_text = $item_address->getCity();
+
+						// Mage::log('iki kotane: '.Zend_Debug::dump($city_text, null, false), null, 'bayu.log');
+
+						$sql = "select * from ".Mage::getConfig()->getTablePrefix()."daftar_alamat where concat(type,' ',city_name) = '$city_text' limit 0,1 ";
+						$res = $this->helper()->fetchSql($sql);
+						// Mage::log('Ada gak kotanya: '.Zend_Debug::dump($res, null, false), null, 'bayu.log');
+						$city_id = $res[0]['city_id'];
+
+						$products[] = array(
+							'weight'  => $_item->getProduct()->getWeight(),
+							'city' => $city_id,
+						);
+
+					}
+				}
+			}
+			// Mage::log($products);
+			// Mage::log('products: '.Zend_Debug::dump($products, null, false), null, 'bayu.log');
+			return $products;
+		}
+
+		public function getOriginId_perSeller()
 		{
 			$product_ids = array();
 	    $seller_ids = array();
@@ -258,7 +248,6 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 						}
 					}
 				}
-
 			}
 
 			foreach ($seller_ids as $seller_id) {
@@ -271,6 +260,7 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 					$seller_list[$seller_id]['city'] = $res[0]['city_id'];
 				}
 			}
+			// Mage::log($seller_list);
 			return $seller_list;
 		}
 
