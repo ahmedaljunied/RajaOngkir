@@ -20,10 +20,15 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 
             $result = Mage::getModel('shipping/rate_result');
 			$count = 0;
+
 			foreach($list_euy as $jangar_kana_hulu)
 			{
 				if ($jangar_kana_hulu['cost'] === 0) {
 					$jangar_kana_hulu['cost'] = 9000;
+				}
+
+				if (strpos($jangar_kana_hulu['text'], 'J&T') !== false) {
+    				$jangar_kana_hulu['cost'] = $jangar_kana_hulu['cost'] + 1000;
 				}
 
 				$count++;
