@@ -51,6 +51,9 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 		public function getCityId()
 		{
 			$string_city = Mage::getSingleton('checkout/session')->getQuote()->getShippingAddress()->getCity();
+			if (!$string_city) {
+				$string_city = Mage::getModel('adminhtml/sales_order_create')->getQuote()->getShippingAddress()->getCity();
+			}
 
 
 			$sql = "select * from ".Mage::getConfig()->getTablePrefix()."daftar_alamat where concat(type,' ',city_name) = '$string_city' limit 0,1 ";
@@ -191,6 +194,10 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 		public function getBeratTotal()
 		{
 			$items = Mage::getSingleton('checkout/session')->getQuote()->getAllItems();
+
+			if(!$items){
+				$items = Mage::getSingleton('adminhtml/sales_order_create')->getQuote()->getAllItems();
+			}
 			$totalWeight = 0;
 			foreach($items as $item) {
 				$totalWeight += ($item->getWeight() * $item->getQty()) ;
