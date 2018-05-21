@@ -192,7 +192,8 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 				$array_rates[] = array(
 
 						'text'=> $text.' '.$main_rates['note'],
-						'cost'=> $main_rates['value']
+						'cost'=> $main_rates['value'],
+						'etd'=> $main_rates['etd']
 				);
 			endif;
 

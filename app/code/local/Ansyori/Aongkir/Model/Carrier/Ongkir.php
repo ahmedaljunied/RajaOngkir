@@ -55,8 +55,8 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 				$string_city = Mage::getModel('adminhtml/sales_order_create')->getQuote()->getShippingAddress()->getCity();
 			}
 
-
-			$sql = "select * from ".Mage::getConfig()->getTablePrefix()."daftar_alamat where concat(type,' ',city_name) = '$string_city' limit 0,1 ";
+			//added a second condition (for customers who have address saved while using iruna api, they don't have city type prefix (kota/kabupaten))
+			$sql = "select * from ".Mage::getConfig()->getTablePrefix()."daftar_alamat where concat(type,' ',city_name) = '$string_city' or city_name = '$string_city' limit 0,1 ";
 
 			$res =  $this->helper()->fetchSql($sql);
 
@@ -91,7 +91,8 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 
 					$rate_list[] = array(
 						'text' => $final_list['text'] . "($weight Kg)",
-						'cost' => $ship_cost
+						'cost' => $ship_cost,
+						'etd'  => $final_list['etd']
 
 					);
 				}
