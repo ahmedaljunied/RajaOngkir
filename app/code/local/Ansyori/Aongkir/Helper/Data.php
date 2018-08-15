@@ -159,13 +159,15 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 		$disabled_servis = explode(",",$disabled_servis);
 
 		$concat_kurir_servis = '';
-
-
-
+		
 		$ori_weight = $weight;
 		$weight = $weight * 1000;
-		$post_fields = "origin=$origin&originType=city&destination=$dest&destinationType=city&weight=$weight&courier=$kurir";
 
+		//for JNE, there are 300gr tolerance.
+		$leftover_weight = $weight % 1000;
+		$rounded_weight = $weight - $leftover_weight;
+
+		$post_fields = "origin=$origin&originType=city&destination=$dest&destinationType=city&weight=$weight&courier=$kurir";
 
 		$post = $this->requestPost('/cost',$post_fields);
 
@@ -197,8 +199,15 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 				);
 			endif;
 
-
-			$harga_perkilo = round($main_rates['value']/$ori_weight,0);
+			//if weight is more than 300gram more than the nearest kilo, it will be rounded up.
+			//otherwise it will be rounded down.
+			//It's the rule from JNE		
+			$counted_weight = ($leftover_weight > 300) ? ($rounded_weight + 1000) : ($rounded_weight);
+			
+			//convert back to kilogram
+			$counted_weight = $counted_weight / 1000;
+			
+			$harga_perkilo = $main_rates['value']/$counted_weight;
 			$this->saveRate($origin,$dest,$harga_perkilo,$name_kurir,$listrates['service'],$text);
 			endforeach;
 		}
